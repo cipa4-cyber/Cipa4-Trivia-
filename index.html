@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>CIPA4 // VOICE_CORE PRO</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --team-a: #00f2ff; /* Cyan para Grupo 1 */
+            --team-b: #ffaa00; /* Naranja/Oro para Grupo 2 */
+            --correct: #33ff00;
+            --wrong: #ff003c;
+            --gold: #d4af37;
+            --bg: #050608;
+        }
+
+        body {
+            background: var(--bg);
+            color: white;
+            font-family: 'Rajdhani', sans-serif;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        /* --- FASE 1: INTRO --- */
+        #intro-screen {
+            position: fixed; inset: 0; background: var(--bg); z-index: 2000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            text-align: center; transition: 0.8s;
+        }
+
+        .intro-quote {
+            max-width: 600px;
+            font-family: 'Rajdhani';
+            font-size: 1.3rem;
+            color: #ccc;
+            letter-spacing: 2px;
+            line-height: 1.6;
+            margin-top: 30px;
+            margin-bottom: 50px;
+            text-transform: uppercase;
+        }
+
+        /* --- FASE 2: REGISTRO --- */
+        #setup-overlay {
+            position: fixed; inset: 0; background: var(--bg); z-index: 1000;
+            display: none; align-items: center; justify-content: center;
+        }
+
+        /* --- FASE 3: GAME BOARD --- */
+        .brand-header {
+            position: absolute; top: 30px; font-family: 'Orbitron';
+            color: var(--gold); font-size: 1.8rem; letter-spacing: 10px;
+            text-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
+        }
+
+        .hud-score {
+            position: fixed; top: 50%; transform: translateY(-50%);
+            width: 200px; padding: 40px 10px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            text-align: center; transition: 0.3s;
+        }
+        
+        /* HUD GRUPO A */
+        .hud-left { left: 30px; border-left: 4px solid #333; border-radius: 0 20px 20px 0; }
+        .hud-left.active-turn { border-color: var(--team-a); box-shadow: 0 0 30px rgba(0, 242, 255, 0.15); background: rgba(0, 242, 255, 0.03); }
+        .hud-left .score-val { color: var(--team-a); }
+
+        /* HUD GRUPO B */
+        .hud-right { right: 30px; border-right: 4px solid #333; border-radius: 20px 0 0 20px; }
+        .hud-right.active-turn { border-color: var(--team-b); box-shadow: 0 0 30px rgba(255, 170, 0, 0.15); background: rgba(255, 170, 0, 0.03); }
+        .hud-right .score-val { color: var(--team-b); }
+
+        .score-val { font-family: 'Orbitron'; font-size: 3.5rem; display: block; }
+        .team-label { font-family: 'Orbitron'; font-size: 0.8rem; color: #888; text-transform: uppercase; margin-bottom: 10px; display: block; }
+
+        .game-core { width: 750px; text-align: center; }
+
+        #question-text { font-family: 'Orbitron'; font-size: 1.8rem; margin-bottom: 40px; }
+
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .option {
+            background: #0e1015; border: 1px solid #222;
+            padding: 30px; font-family: 'Orbitron'; font-size: 1rem;
+            border-radius: 8px; color: #555; transition: 0.3s;
+        }
+
+        .option.correct { 
+            border-color: var(--correct) !important; 
+            color: var(--correct) !important; 
+            box-shadow: 0 0 25px rgba(51, 255, 0, 0.3) !important; 
+        }
+
+        .btn-ui {
+            background: transparent; border: 1px solid #555;
+            color: #aaa; padding: 12px 25px;
+            font-family: 'Orbitron'; font-size: 0.75rem; cursor: pointer;
+            clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%);
+            transition: 0.3s; margin: 0 5px;
+        }
+        .btn-ui:hover { background: #222; color: white; }
+        
+        /* Botones específicos */
+        .btn-cyan { border-color: var(--team-a); color: var(--team-a); }
+        .btn-cyan:hover { background: var(--team-a); color: black; }
+        .btn-gold { border-color: var(--gold); color: var(--gold); }
+        .btn-gold:hover { background: var(--gold); color: black; }
+
+        #status-msg { margin-top: 25px; font-size: 0.9rem; color: #666; letter-spacing: 2px; text-transform: uppercase; }
+    </style>
+</head>
+<body>
+
+    <div id="intro-screen">
+        <h1 style="font-family:'Orbitron'; color:var(--gold); font-size: 5rem; margin:0; text-shadow: 0 0 20px rgba(212,175,55,0.5);">CIPA4</h1>
+        <div class="intro-quote">
+            "La meta del arte es representar<br>
+            no la apariencia externa de las cosas,<br>
+            si no su significado interno"<br>
+            <span style="color: var(--gold); font-weight: bold; display: block; margin-top: 10px;">— ARISTÓTELES</span>
+        </div>
+        <button class="btn-ui btn-gold" onclick="showRegistration()">INICIAR PROTOCOLO</button>
+    </div>
+
+    <div id="setup-overlay">
+        <div style="text-align: center; padding: 50px; border: 1px solid var(--gold); background: rgba(255,255,255,0.02);">
+            <h2 style="font-family: 'Orbitron'; color: var(--gold);">REGISTRO DE EQUIPOS</h2>
+            <button class="btn-ui btn-cyan" onclick="recordName('a')">🎤 GRUPO 1: <span id="setup-a">---</span></button><br><br>
+            <button class="btn-ui" style="border-color: var(--team-b); color: var(--team-b);" onclick="recordName('b')">🎤 GRUPO 2: <span id="setup-b">---</span></button><br><br>
+            <button class="btn-ui btn-gold" onclick="startGame()">CONTINUAR AL CAMPO DE BATALLA</button>
+        </div>
+    </div>
+
+    <div class="brand-header">CIPA4</div>
+
+    <div class="hud-score hud-left" id="hud-a">
+        <span class="team-label" id="label-a">GRUPO A</span>
+        <span class="score-val" id="score-a">00</span>
+    </div>
+
+    <div class="hud-score hud-right" id="hud-b">
+        <span class="team-label" id="label-b">GRUPO B</span>
+        <span class="score-val" id="score-b">00</span>
+    </div>
+
+    <div class="game-core">
+        <div id="question-text">SISTEMA STANDBY</div>
+        <div class="options-grid" id="options-container">
+            <div class="option" id="opt-0">---</div>
+            <div class="option" id="opt-1">---</div>
+            <div class="option" id="opt-2">---</div>
+            <div class="option" id="opt-3">---</div>
+        </div>
+        <div id="status-msg">ESPERANDO INICIO...</div>
+        
+        <div style="margin-top: 40px;">
+            <button class="btn-ui btn-cyan" onclick="nextQuestion()">SIGUIENTE</button>
+            <button class="btn-ui btn-cyan" id="btn-mic" onclick="startBattleListening()">🎤 ESCUCHAR VOZ</button>
+            <button class="btn-ui btn-gold" onclick="revealAndAward()">REVELAR Y CALIFICAR</button>
+            <button class="btn-ui" onclick="toggleTurn()">CAMBIAR TURNO</button>
+        </div>
+    </div>
+
+    <script>
+        let scores = { a: 0, b: 0 };
+        let names = { a: "EQUIPO 1", b: "EQUIPO 2" };
+        let currentIdx = -1;
+        let activeTeam = 'a';
+        let isRevealed = false;
+
+        const db = [
+            { q: "¿Cuál es el planeta más grande del sistema solar?", o: ["MARTE", "JÚPITER", "SATURNO", "TIERRA"], a: 1 },
+            { q: "¿Qué elemento químico tiene el símbolo 'O'?", o: ["ORO", "OSMIO", "OXÍGENO", "HIERRO"], a: 2 }
+        ];
+
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.lang = 'es-ES';
+        recognition.continuous = true;
+
+        function showRegistration() {
+            document.getElementById('intro-screen').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('intro-screen').style.display = 'none';
+                document.getElementById('setup-overlay').style.display = 'flex';
+            }, 800);
+        }
+
+        function recordName(team) {
+            recognition.start();
+            recognition.onresult = (event) => {
+                names[team] = event.results[0][0].transcript.toUpperCase();
+                document.getElementById(`setup-${team}`).innerText = names[team];
+                recognition.stop();
+            };
+        }
+
+        function startGame() {
+            document.getElementById('label-a').innerText = names.a;
+            document.getElementById('label-b').innerText = names.b;
+            document.getElementById('setup-overlay').style.display = 'none';
+            updateTurnUI();
+            nextQuestion();
+        }
+
+        function toggleTurn() {
+            activeTeam = (activeTeam === 'a') ? 'b' : 'a';
+            updateTurnUI();
+        }
+
+        function updateTurnUI() {
+            document.getElementById('hud-a').classList.remove('active-turn');
+            document.getElementById('hud-b').classList.remove('active-turn');
+            document.getElementById(`hud-${activeTeam}`).classList.add('active-turn');
+        }
+
+        function nextQuestion() {
+            isRevealed = false;
+            currentIdx = (currentIdx + 1) % db.length;
+            const q = db[currentIdx];
+            document.getElementById('question-text').innerText = q.q;
+            
+            document.querySelectorAll('.option').forEach((el, i) => {
+                el.innerText = q.o[i];
+                el.className = 'option'; // Limpia clases previas
+                el.style.borderColor = "#222";
+                el.style.color = "#555";
+                el.style.boxShadow = "none";
+                el.style.opacity = "1";
+                el.dataset.team = ""; // Limpia el dueño de la opción
+                el.id = `opt-${i}`;
+            });
+            document.getElementById('status-msg').innerText = "ESPERANDO RESPUESTAS...";
+        }
+
+        function startBattleListening() {
+            if(isRevealed) return;
+            recognition.start();
+            document.getElementById('btn-mic').innerText = "ESCUCHANDO...";
+            
+            recognition.onresult = (event) => {
+                const said = event.results[event.results.length - 1][0].transcript.toUpperCase();
+                document.getElementById('status-msg').innerText = `DETECTADO: ${said}`;
+
+                document.querySelectorAll('.option').forEach(el => {
+                    if (said.includes(el.innerText)) {
+                        el.classList.add('selected');
+                        el.dataset.team = activeTeam; // Guarda qué equipo dijo esta opción
+                        
+                        // Ilumina la opción con el color del equipo que la dijo
+                        if (activeTeam === 'a') {
+                            el.style.borderColor = "var(--team-a)";
+                            el.style.color = "white";
+                            el.style.boxShadow = "inset 0 0 15px rgba(0, 242, 255, 0.2)";
+                        } else {
+                            el.style.borderColor = "var(--team-b)";
+                            el.style.color = "white";
+                            el.style.boxShadow = "inset 0 0 15px rgba(255, 170, 0, 0.2)";
+                        }
+                    }
+                });
+            };
+        }
+
+        function revealAndAward() {
+            if(isRevealed) return;
+            isRevealed = true;
+            recognition.stop();
+            document.getElementById('btn-mic').innerText = "🎤 ESCUCHAR VOZ";
+
+            const q = db[currentIdx];
+            const correctEl = document.getElementById(`opt-${q.a}`);
+
+            // LÓGICA DE JUSTICIA: Verifica si la correcta fue seleccionada y QUIÉN la seleccionó
+            if (correctEl.classList.contains('selected')) {
+                const winningTeam = correctEl.dataset.team;
+                scores[winningTeam] += 10;
+                document.getElementById(`score-${winningTeam}`).innerText = scores[winningTeam].toString().padStart(2, '0');
+                document.getElementById('status-msg').innerText = `¡RESPUESTA CORRECTA! PUNTOS PARA: ${names[winningTeam]}`;
+            } else {
+                document.getElementById('status-msg').innerText = "NINGÚN EQUIPO ACERTÓ";
+            }
+
+            // Revelar visualmente la respuesta
+            document.querySelectorAll('.option').forEach((el, i) => {
+                if (i === q.a) {
+                    el.classList.add('correct');
+                } else {
+                    el.style.opacity = "0.2"; // Apaga las incorrectas
+                }
+            });
+        }
+    </script>
+</body>
+</html>
