@@ -1,0 +1,345 @@
+```html
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>CIPA4 // GRUPO DE ESTUDIO</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500;700&family=Cinzel:wght@400;700&family=Playfair+Display:ital,wght@0,400;1,700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --team-a: #00e5ff;
+            --team-b: #ffaa00;
+            --correct: #00ff9d;
+            --wrong: #ff2e63;
+            --gold: #d4af37;
+            --bg-deep: #020408;
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-strong: rgba(255, 255, 255, 0.1);
+            --border: rgba(255, 255, 255, 0.15);
+            --text-main: #ffffff;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            font-family: 'Rajdhani', sans-serif;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow: hidden;
+            background: radial-gradient(circle at center, #0a1128 0%, #020408 100%);
+        }
+
+        #bg-canvas { position: fixed; inset: 0; z-index: -1; }
+
+        /* Fondo Estático C4 con visibilidad mejorada */
+        .bg-watermark {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: 'Cinzel', serif;
+            font-size: 40vw;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.05);
+            z-index: -2;
+            user-select: none;
+            pointer-events: none;
+            text-shadow: 0 0 40px rgba(255, 255, 255, 0.03);
+            animation: breathing 10s ease-in-out infinite;
+        }
+
+        @keyframes breathing {
+            0%, 100% { opacity: 0.3; transform: translate(-50%, -50%) scale(1); }
+            50% { opacity: 0.7; transform: translate(-50%, -50%) scale(1.05); }
+        }
+
+        #intro-screen {
+            position: fixed; inset: 0; background: var(--bg-deep); z-index: 2000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            text-align: center; transition: 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #setup-screen {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 1500;
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+            backdrop-filter: blur(20px); transition: 1s;
+        }
+
+        .glass-card {
+            background: var(--glass); border: 1px solid var(--border); border-radius: 20px;
+            padding: 40px; text-align: center; width: 450px;
+        }
+
+        .quote-box { max-width: 700px; margin-bottom: 40px; padding: 0 20px; }
+
+        .quote-text {
+            font-family: 'Playfair Display', serif; font-style: italic; font-size: 1.8rem;
+            color: rgba(255,255,255,0.9); line-height: 1.4; display: block;
+        }
+
+        .quote-author {
+            font-family: 'Orbitron'; color: var(--gold); font-size: 0.8rem; 
+            letter-spacing: 5px; margin-top: 15px; display: block;
+        }
+
+        .cipa-logo {
+            font-family: 'Cinzel', serif; font-size: 8rem; font-weight: 700;
+            letter-spacing: 50px; color: #fff; margin-bottom: 20px; padding-left: 50px;
+            text-shadow: 0 0 50px rgba(255,255,255,0.2);
+            animation: elegantEntrance 3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+
+        @keyframes elegantEntrance {
+            0% { opacity: 0; letter-spacing: 10px; transform: scale(0.95); filter: blur(20px); }
+            100% { opacity: 1; letter-spacing: 50px; transform: scale(1); filter: blur(0); }
+        }
+
+        .hud-score {
+            position: fixed; top: 50%; transform: translateY(-50%); width: 180px; padding: 25px 15px;
+            background: var(--glass); border: 1px solid var(--border);
+            border-radius: 12px; text-align: center; transition: 0.5s ease; backdrop-filter: blur(10px);
+        }
+
+        .hud-left { left: 40px; border-left: 4px solid var(--team-a); }
+        .hud-right { right: 40px; border-right: 4px solid var(--team-b); }
+
+        .hud-score.active-turn { background: var(--glass-strong); transform: translateY(-50%) scale(1.1); border-color: #fff; }
+
+        .score-val { font-family: 'Orbitron'; font-size: 3.5rem; color: #fff; display: block; }
+        .team-label { font-size: 0.8rem; letter-spacing: 3px; color: var(--gold); text-transform: uppercase; }
+
+        .game-core { width: 850px; margin-top: 80px; z-index: 10; text-align: center; }
+
+        #question-text {
+            font-family: 'Orbitron'; font-size: 2.2rem; margin-bottom: 60px; font-weight: 700;
+            color: #fff; text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        }
+
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; }
+
+        .option {
+            background: var(--glass); border: 1px solid var(--border); padding: 35px 25px;
+            border-radius: 15px; cursor: pointer; transition: 0.3s; font-weight: 500;
+            display: flex; align-items: center; font-size: 1.2rem; color: #fff; 
+        }
+
+        .option:hover { background: var(--glass-strong); transform: translateY(-3px); border-color: #fff; }
+
+        .option.selected-a { border-left: 10px solid var(--team-a); background: rgba(0,229,255,0.15); }
+        .option.selected-b { border-right: 10px solid var(--team-b); background: rgba(255,170,0,0.15); }
+        .option.correct { background: rgba(0,255,157,0.3) !important; border-color: var(--correct) !important; box-shadow: 0 0 30px rgba(0,255,157,0.2); }
+
+        .btn-ui {
+            background: transparent; border: 1px solid var(--border); color: #fff;
+            padding: 15px 30px; border-radius: 8px; font-family: 'Orbitron';
+            font-size: 0.75rem; letter-spacing: 2px; cursor: pointer; transition: 0.3s;
+            margin: 10px; text-transform: uppercase;
+        }
+
+        .btn-ui:hover { border-color: var(--gold); color: var(--gold); background: rgba(212,175,55,0.1); }
+
+        #status-msg { margin-top: 40px; font-size: 0.9rem; letter-spacing: 4px; color: var(--gold); text-transform: uppercase; }
+
+        .control-bar { margin-top: 50px; display: flex; justify-content: center; }
+    </style>
+</head>
+<body>
+    <canvas id="bg-canvas"></canvas>
+    <div class="bg-watermark">C4</div>
+
+    <div id="intro-screen">
+        <div class="quote-box">
+            <span class="quote-text">"El propósito del arte es lavar el polvo de la vida cotidiana de nuestras almas."</span>
+            <span class="quote-author">— PABLO PICASSO</span>
+        </div>
+        <div class="cipa-logo">CIPA4</div>
+        <div class="brand-header">GRUPO DE ESTUDIO</div>
+        <button class="btn-ui" onclick="unlockAudioAndStart()" style="font-size: 1rem; border-color: var(--gold);">INICIAR PROTOCOLO</button>
+    </div>
+
+    <div id="setup-screen">
+        <div class="glass-card">
+            <h2 style="font-family: 'Orbitron'; color: var(--gold); letter-spacing: 3px;">REGISTRO POR VOZ</h2>
+            <p style="font-size: 0.8rem; color: #888; margin-bottom: 30px;">Presiona el botón y di el nombre del equipo</p>
+            <button class="btn-ui" id="btn-name-a" onclick="recordTeamName('a')" style="width:100%; border-color: var(--team-a);">🎤 EQUIPO ALFA: <span id="disp-a">ESPERANDO...</span></button>
+            <button class="btn-ui" id="btn-name-b" onclick="recordTeamName('b')" style="width:100%; border-color: var(--team-b);">🎤 EQUIPO BETA: <span id="disp-b">ESPERANDO...</span></button>
+            <div style="margin-top: 40px;">
+                <button class="btn-ui" onclick="deployGame()" style="border-color: var(--gold);">DESPLEGAR SISTEMA</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="brand-header" style="margin-top:20px; position:relative; z-index:10;">CIPA4</div>
+
+    <div class="hud-score hud-left" id="hud-a"><span class="team-label" id="label-a">ALFA</span><span class="score-val" id="score-a">00</span></div>
+    <div class="hud-score hud-right" id="hud-b"><span class="team-label" id="label-b">BETA</span><span class="score-val" id="score-b">00</span></div>
+
+    <div class="game-core">
+        <div id="question-text">SISTEMA EN STANDBY</div>
+        <div class="options-grid" id="options-container"></div>
+        <div id="status-msg"></div>
+        <div class="control-bar">
+            <button class="btn-ui" onclick="nextQuestion()">SIGUIENTE</button>
+            <button class="btn-ui" id="btn-mic" onclick="startBattleListening()" style="border-color: var(--team-a);">🎤 ESCUCHAR</button>
+            <button class="btn-ui" onclick="revealAndAward()" style="border-color: var(--gold);">REVELAR</button>
+            <button class="btn-ui" onclick="manualToggle()">TURNO</button>
+        </div>
+    </div>
+
+    <script>
+        let audioCtx = null, scores = { a: 0, b: 0 }, names = { a: "ALFA", b: "BETA" };
+        let selections = { a: null, b: null }, currentIdx = -1, activeTeam = 'b', isRevealed = false;
+
+        const db = [
+            { q: "¿Qué elemento define la orientación pedagógica de una institución educativa?", o: ["Manual de convivencia", "PEI (Proyecto Institucional)", "Horario escolar", "Infraestructura"], a: 1 },
+            { q: "¿Qué ocurre al combinar colores complementarios en una composición?", o: ["Neutralización total", "Efecto monocromático", "Alto contraste visual", "Pérdida de intensidad"], a: 2 },
+            { q: "¿Qué caracteriza al arte del Renacimiento?", o: ["Abstracción absoluta", "Rechazo de perspectiva", "Goticismo oscuro", "Centralidad del ser humano"], a: 3 },
+            { q: "¿Qué plantea el estudio del color de Johannes Itten?", o: ["Relaciones armónicas y contrastes", "Ornamentación simple", "Ausencia de emoción", "Dependencia lumínica ùnica"], a: 0 },
+            { q: "¿Qué característica define al realismo mágico?", o: ["Fantasía pura", "Racionalismo científico", "Fusión de lo real y fantástico", "Narrativa lineal simple"], a: 2 },
+            { q: "¿Qué propone el teatro épico de Bertolt Brecht?", o: ["Inmersión emocional", "Distanciamiento crítico", "Improvisación total", "Teatro sin mensaje"], a: 1 },
+            { q: "¿Qué define una puesta en escena completa?", o: ["Texto dramático solo", "Actuación aislada", "Vestuario ùnico", "Integración total de elementos"], a: 3 },
+            { q: "¶Función de la expresión corporal en el arte?", o: ["Comunicar ideas con el cuerpo", "Gimnasia técnica", "Mejora física", "Evitar interpretación"], a: 0 },
+            { q: "Segùn Platón, el arte es principalmente:", o: ["Creación original", "Emoción pura", "Mímesis (Imitación)", "Ciencia exacta"], a: 2 },
+            { q: "Para Immanuel Kant, el juicio estético es:", o: ["Utilitario", "Interesado", "Técnico", "Desinteresado"], a: 3 }
+        ];
+
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        window.onresize = resize; resize();
+        class Particle { constructor() { this.x = Math.random()*canvas.width; this.y = Math.random()*canvas.height; this.v = Math.random()*0.5; this.s = Math.random()*1.5; }
+            draw() { this.y -= this.v; if(this.y<0) this.y=canvas.height; ctx.fillStyle='rgba(255,255,255,0.2)'; ctx.beginPath(); ctx.arc(this.x,this.y,this.s,0,Math.PI*2); ctx.fill(); } }
+        for(let i=0; i<80; i++) particles.push(new Particle());
+        function anim() { ctx.clearRect(0,0,canvas.width,canvas.height); particles.forEach(p=>p.draw()); requestAnimationFrame(anim); } anim();
+
+        function initAudio() { if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); if(audioCtx.state === 'suspended') audioCtx.resume(); }
+        function synth(freq, type, dur, vol = 0.2) {
+            if(!audioCtx) return; const osc = audioCtx.createOscillator(); const g = audioCtx.createGain();
+            osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            g.gain.setValueAtTime(vol, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime+dur);
+            osc.connect(g); g.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime+dur);
+        }
+
+        const sounds = {
+            select: () => synth(600, 'sine', 0.1),
+            ok: () => { synth(440, 'triangle', 0.2, 0.1); setTimeout(()=>synth(880, 'sine', 0.4, 0.1), 150); },
+            error: () => { synth(150, 'sawtooth', 0.3, 0.2); setTimeout(()=>synth(100, 'sawtooth', 0.4, 0.2), 150); }
+        };
+
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.lang = 'es-ES';
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
+
+        function unlockAudioAndStart() { 
+            initAudio(); 
+            sounds.select(); 
+            document.getElementById('intro-screen').style.opacity = '0'; 
+            setTimeout(()=> { 
+                document.getElementById('intro-screen').style.display = 'none';
+                document.getElementById('setup-screen').style.display = 'flex';
+            }, 1000); 
+        }
+
+        function recordTeamName(team) {
+            initAudio();
+            const btn = document.getElementById(`btn-name-${team}`);
+            const disp = document.getElementById(`disp-${team}`);
+            btn.style.background = "rgba(255,255,255,0.1)";
+            
+            recognition.onresult = (event) => {
+                const result = event.results[0][0].transcript.toUpperCase();
+                names[team] = result;
+                disp.innerText = result;
+                sounds.select();
+            };
+            
+            recognition.onend = () => { btn.style.background = "transparent"; };
+            recognition.start();
+        }
+
+        function deployGame() {
+            document.getElementById('label-a').innerText = names.a;
+            document.getElementById('label-b').innerText = names.b;
+            document.getElementById('setup-screen').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('setup-screen').style.display = 'none';
+                nextQuestion();
+            }, 1000);
+        }
+
+        function nextQuestion() {
+            isRevealed = false; selections = { a: null, b: null };
+            currentIdx = (currentIdx + 1) % db.length;
+            const q = db[currentIdx];
+            document.getElementById('question-text').innerText = q.q;
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+            q.o.forEach((opt, i) => {
+                const div = document.createElement('div'); div.className = 'option'; div.id = `opt-${i}`;
+                div.onclick = () => selectOption(i);
+                div.innerHTML = `<span style="color:var(--gold); font-family:Orbitron; margin-right:15px">0${i+1}</span> ${opt}`;
+                container.appendChild(div);
+            });
+            toggleTurn();
+        }
+
+        function toggleTurn() {
+            activeTeam = activeTeam === 'a' ? 'b' : 'a';
+            document.querySelectorAll('.hud-score').forEach(h => h.classList.remove('active-turn'));
+            document.getElementById(`hud-${activeTeam}`).classList.add('active-turn');
+            document.getElementById('status-msg').innerText = `TURNO DE: ${names[activeTeam]}`;
+        }
+
+        function manualToggle() { if(!isRevealed) { toggleTurn(); sounds.select(); } }
+
+        function selectOption(idx) { if(isRevealed) return; selections[activeTeam] = idx; sounds.select(); renderSelections(); }
+
+        function renderSelections() {
+            document.querySelectorAll('.option').forEach(o => o.classList.remove('selected-a', 'selected-b'));
+            if(selections.a !== null) document.getElementById(`opt-${selections.a}`).classList.add('selected-a');
+            if(selections.b !== null) document.getElementById(`opt-${selections.b}`).classList.add('selected-b');
+        }
+
+        function revealAndAward() {
+            if(isRevealed) return; isRevealed = true;
+            const q = db[currentIdx];
+            if (selections.a === q.a) scores.a += 10;
+            if (selections.b === q.a) scores.b += 10;
+            document.getElementById('score-a').innerText = scores.a.toString().padStart(2,'0');
+            document.getElementById('score-b').innerText = scores.b.toString().padStart(2,'0');
+            document.getElementById(`opt-${q.a}`).classList.add('correct');
+            const win = (selections.a === q.a || selections.b === q.a);
+            if(win) sounds.ok(); else sounds.error();
+            document.getElementById('status-msg').innerText = "SISTEMA ACTUALIZADO";
+        }
+
+        function startBattleListening() {
+            if(isRevealed) return; initAudio();
+            document.getElementById('btn-mic').innerText = "...";
+            recognition.onresult = (event) => {
+                const text = event.results[0][0].transcript.toLowerCase();
+                let match = null;
+                if (/1|uno|una/.test(text)) match = 0; 
+                else if (/2|dos/.test(text)) match = 1; 
+                else if (/3|tres/.test(text)) match = 2; 
+                else if (/4|cuatro|cuatros/.test(text)) match = 3;
+                
+                if (match !== null) { 
+                    selectOption(match); 
+                    recognition.stop(); 
+                }
+            };
+            recognition.onend = () => document.getElementById('btn-mic').innerText = "🎤 ESCUCHAR";
+            recognition.start();
+        }
+    </script>
+</body>
+</html>
+```
