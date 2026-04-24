@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>CIPA4 // ACADEMIC_CORE V3</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --team-a: #00f2ff; 
+            --team-b: #ffaa00; 
+            --correct: #33ff00;
+            --gold: #d4af37;
+            --bg: #050608;
+        }
+
+        body {
+            background: var(--bg);
+            color: white;
+            font-family: 'Rajdhani', sans-serif;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        /* --- INTRO --- */
+        #intro-screen {
+            position: fixed; inset: 0; background: var(--bg); z-index: 2000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            text-align: center; transition: 0.8s;
+        }
+
+        .intro-quote {
+            max-width: 650px;
+            font-family: 'Rajdhani';
+            font-size: 1.4rem;
+            color: #ccc;
+            letter-spacing: 2px;
+            line-height: 1.6;
+            margin: 40px 0;
+            text-transform: uppercase;
+        }
+
+        /* --- REGISTRO --- */
+        #setup-overlay {
+            position: fixed; inset: 0; background: var(--bg); z-index: 1000;
+            display: none; align-items: center; justify-content: center;
+        }
+
+        /* --- GAME BOARD --- */
+        .brand-header {
+            position: absolute; top: 30px; font-family: 'Orbitron';
+            color: var(--gold); font-size: 1.8rem; letter-spacing: 10px;
+            text-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
+        }
+
+        .hud-score {
+            position: fixed; top: 50%; transform: translateY(-50%);
+            width: 220px; padding: 40px 10px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            text-align: center; transition: 0.4s;
+        }
+        
+        .hud-left { left: 30px; border-left: 4px solid #222; border-radius: 0 20px 20px 0; }
+        .hud-left.active-turn { border-color: var(--team-a); box-shadow: 0 0 30px rgba(0, 242, 255, 0.15); background: rgba(0, 242, 255, 0.04); }
+        
+        .hud-right { right: 30px; border-right: 4px solid #222; border-radius: 20px 0 0 20px; }
+        .hud-right.active-turn { border-color: var(--team-b); box-shadow: 0 0 30px rgba(255, 170, 0, 0.15); background: rgba(255, 170, 0, 0.04); }
+
+        .score-val { font-family: 'Orbitron'; font-size: 4rem; display: block; margin-top: 10px;}
+        #score-a { color: var(--team-a); }
+        #score-b { color: var(--team-b); }
+        .team-label { font-family: 'Orbitron'; font-size: 0.85rem; color: #888; text-transform: uppercase; letter-spacing: 2px; }
+
+        .game-core { width: 800px; text-align: center; }
+        #question-text { font-family: 'Orbitron'; font-size: 1.5rem; margin-bottom: 40px; min-height: 80px; color: #eee; line-height: 1.4; }
+
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .option {
+            background: #0e1015; border: 1px solid #222;
+            padding: 25px; font-family: 'Orbitron'; font-size: 0.9rem;
+            border-radius: 8px; color: #444; transition: 0.3s;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        .option.correct { 
+            border-color: var(--correct) !important; 
+            color: var(--correct) !important; 
+            box-shadow: 0 0 25px rgba(51, 255, 0, 0.2) !important; 
+        }
+
+        .btn-ui {
+            background: transparent; border: 1px solid #444;
+            color: #888; padding: 14px 28px;
+            font-family: 'Orbitron'; font-size: 0.75rem; cursor: pointer;
+            clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%);
+            transition: 0.3s; margin: 0 8px;
+        }
+        .btn-ui:hover { background: #1a1a1a; color: white; border-color: white; }
+        .btn-gold { border-color: var(--gold); color: var(--gold); }
+        
+        #status-msg { margin-top: 30px; font-size: 0.9rem; color: #555; letter-spacing: 3px; text-transform: uppercase; }
+    </style>
+</head>
+<body>
+
+    <div id="intro-screen">
+        <h1 style="font-family:'Orbitron'; color:var(--gold); font-size: 5rem; margin:0; text-shadow: 0 0 20px rgba(212,175,55,0.4);">CIPA4</h1>
+        <div class="intro-quote">
+            "La meta del arte es representar<br>
+            no la apariencia externa de las cosas,<br>
+            sino su significado interno"<br>
+            <span style="color: var(--gold); font-weight: bold; display: block; margin-top: 15px;">— ARISTÓTELES</span>
+        </div>
+        <button class="btn-ui btn-gold" onclick="showRegistration()">INICIAR PROTOCOLO</button>
+    </div>
+
+    <div id="setup-overlay">
+        <div style="text-align: center; padding: 50px; border: 1px solid var(--gold); background: rgba(10,10,10,0.95);">
+            <h2 style="font-family: 'Orbitron'; color: var(--gold); margin-bottom: 40px;">REGISTRO DE UNIDADES</h2>
+            <button class="btn-ui" style="border-color: var(--team-a); color: var(--team-a);" onclick="recordName('a')">🎤 GRUPO 1: <span id="setup-a">---</span></button><br><br>
+            <button class="btn-ui" style="border-color: var(--team-b); color: var(--team-b);" onclick="recordName('b')">🎤 GRUPO 2: <span id="setup-b">---</span></button><br><br><br>
+            <button class="btn-ui btn-gold" onclick="startGame()">CONFIRMAR COMPETENCIA</button>
+        </div>
+    </div>
+
+    <div class="brand-header">CIPA4</div>
+    <div class="hud-score hud-left" id="hud-a">
+        <span class="team-label" id="label-a">GRUPO A</span>
+        <span class="score-val" id="score-a">00</span>
+    </div>
+    <div class="hud-score hud-right" id="hud-b">
+        <span class="team-label" id="label-b">GRUPO B</span>
+        <span class="score-val" id="score-b">00</span>
+    </div>
+
+    <div class="game-core">
+        <div id="question-text">SISTEMA EN ESPERA</div>
+        <div class="options-grid" id="options-container">
+            <div class="option" id="opt-0">---</div>
+            <div class="option" id="opt-1">---</div>
+            <div class="option" id="opt-2">---</div>
+            <div class="option" id="opt-3">---</div>
+        </div>
+        <div id="status-msg">ESPERANDO COMANDO DE VOZ</div>
+        
+        <div style="margin-top: 50px;">
+            <button class="btn-ui" onclick="nextQuestion()">SIGUIENTE</button>
+            <button class="btn-ui btn-gold" id="btn-mic" onclick="startBattleListening()">🎤 ESCUCHAR</button>
+            <button class="btn-ui btn-gold" onclick="revealAndAward()">REVELAR Y CALIFICAR</button>
+            <button class="btn-ui" onclick="toggleTurn()">CAMBIAR TURNO</button>
+        </div>
+    </div>
+
+    <script>
+        let scores = { a: 0, b: 0 };
+        let names = { a: "EQUIPO 1", b: "EQUIPO 2" };
+        let currentIdx = -1;
+        let activeTeam = 'a';
+        let isRevealed = false;
+
+        const db = [
+            { q: "¿Qué elemento define la orientación pedagógica de una institución educativa?", o: ["PROYECTO EDUCATIVO ", "MANUAL DE CONVIVENCIA", "HORARIO ESCOLAR", "INFRAESTRUCTURA"], a: 0 },
+            { q: "¿Qué ocurre al combinar colores complementarios en una composición artística?", o: ["SE NEUTRALIZAN", "PIERDEN INTENSIDAD", "GENERAN ALTO CONTRASTE", "SE VUELVEN MONOCROMÁTICOS"], a: 2 },
+            { q: "¿Qué caracteriza al arte del Renacimiento?", o: ["ABSTRACCIÓN TOTAL", "OSCURIDAD CROMÁTICA", "RECHAZO DE LA PERSPECTIVA", "CENTRALIDAD DEL SER HUMANO"], a: 3 },
+            { q: "¿Qué plantea el estudio del color de Johannes Itten?", o: ["RELACIONES ARMÓNICAS", "EL COLOR ES DECORATIVO", "NO COMUNICA EMOCIONES", "DEPENDE SOLO DE LA LUZ"], a: 0 },
+            { q: "¿Qué característica define al realismo mágico en la literatura?", o: ["NARRACIÓN CIENTÍFICA", "RECHAZO DE LO SIMBÓLICO", "MEZCLA DE REAL Y FANTÁSTICO", "USO EXCLUSIVO DE FANTASÍA"], a: 2 },
+            { q: "¿Qué propone el teatro épico de Bertolt Brecht?", o: ["IDENTIFICACIÓN EMOCIONAL", "IMPROVISACIÓN SIN ESTRUCTURA", "ELIMINACIÓN DEL MENSAJE", "DISTANCIAMIENTO CRÍTICO"], a: 3 },
+            { q: "¿Qué define una puesta en escena completa?", o: ["SOLO EL TEXTO", "INTEGRACIÓN DE ELEMENTOS", "IMPROVISACIÓN DEL ACTOR", "USO DE VESTUARIO"], a: 1 },
+            { q: "¿Qué función cumple la expresión corporal en la educación artística?", o: ["REPETIR MOVIMIENTOS", "COMUNICAR IDEAS Y EMOCIONES", "MEJORAR CONDICIÓN FÍSICA", "EVITAR INTERPRETACIÓN"], a: 1 },
+            { q: "Según Platón, el arte es principalmente:", o: ["IMITACIÓN DE REALIDAD", "CREACIÓN ABSOLUTA", "EXPRESIÓN PURA", "CONSTRUCCIÓN CIENTÍFICA"], a: 0 },
+            { q: "Para Immanuel Kant, el juicio estético se caracteriza por ser:", o: ["UTILITARIO", "INTERESADO", "DESINTERESADO", "TÉCNICO"], a: 2 }
+        ];
+
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.lang = 'es-ES';
+        recognition.continuous = true;
+
+        function showRegistration() {
+            document.getElementById('intro-screen').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('intro-screen').style.display = 'none';
+                document.getElementById('setup-overlay').style.display = 'flex';
+            }, 800);
+        }
+
+        function recordName(team) {
+            recognition.start();
+            recognition.onresult = (event) => {
+                names[team] = event.results[0][0].transcript.toUpperCase();
+                document.getElementById(`setup-${team}`).innerText = names[team];
+                recognition.stop();
+            };
+        }
+
+        function startGame() {
+            document.getElementById('label-a').innerText = names.a;
+            document.getElementById('label-b').innerText = names.b;
+            document.getElementById('setup-overlay').style.display = 'none';
+            updateTurnUI();
+            nextQuestion();
+        }
+
+        function toggleTurn() {
+            activeTeam = (activeTeam === 'a') ? 'b' : 'a';
+            updateTurnUI();
+        }
+
+        function updateTurnUI() {
+            document.getElementById('hud-a').classList.remove('active-turn');
+            document.getElementById('hud-b').classList.remove('active-turn');
+            document.getElementById(`hud-${activeTeam}`).classList.add('active-turn');
+        }
+
+        function nextQuestion() {
+            isRevealed = false;
+            currentIdx = (currentIdx + 1) % db.length;
+            const q = db[currentIdx];
+            document.getElementById('question-text').innerText = q.q;
+            
+            document.querySelectorAll('.option').forEach((el, i) => {
+                el.innerText = q.o[i];
+                el.className = 'option';
+                el.style.borderColor = "#222";
+                el.style.color = "#444";
+                el.style.boxShadow = "none";
+                el.style.opacity = "1";
+                el.dataset.team = "";
+            });
+            document.getElementById('status-msg').innerText = "ESPERANDO RESPUESTA...";
+        }
+
+        function startBattleListening() {
+            if(isRevealed) return;
+            recognition.start();
+            document.getElementById('btn-mic').innerText = "ESCUCHANDO...";
+            
+            recognition.onresult = (event) => {
+                const said = event.results[event.results.length - 1][0].transcript.toUpperCase();
+                document.getElementById('status-msg').innerText = `VOZ: ${said}`;
+
+                document.querySelectorAll('.option').forEach(el => {
+                    if (said.includes(el.innerText)) {
+                        el.classList.add('selected');
+                        el.dataset.team = activeTeam; 
+                        
+                        if (activeTeam === 'a') {
+                            el.style.borderColor = "var(--team-a)";
+                            el.style.color = "white";
+                            el.style.boxShadow = "inset 0 0 15px rgba(0, 242, 255, 0.2)";
+                        } else {
+                            el.style.borderColor = "var(--team-b)";
+                            el.style.color = "white";
+                            el.style.boxShadow = "inset 0 0 15px rgba(255, 170, 0, 0.2)";
+                        }
+                    }
+                });
+            };
+        }
+
+        function revealAndAward() {
+            if(isRevealed) return;
+            isRevealed = true;
+            recognition.stop();
+            document.getElementById('btn-mic').innerText = "🎤 ESCUCHAR";
+
+            const q = db[currentIdx];
+            const correctEl = document.getElementById(`opt-${q.a}`);
+
+            if (correctEl.classList.contains('selected') && correctEl.dataset.team) {
+                const winningTeam = correctEl.dataset.team;
+                scores[winningTeam] += 10;
+                document.getElementById(`score-${winningTeam}`).innerText = scores[winningTeam].toString().padStart(2, '0');
+                document.getElementById('status-msg').innerText = `CORRECTO: ${names[winningTeam]} +10`;
+            } else {
+                document.getElementById('status-msg').innerText = "SIN ACIERTOS";
+            }
+
+            document.querySelectorAll('.option').forEach((el, i) => {
+                if (i === q.a) {
+                    el.classList.add('correct');
+                } else {
+                    el.style.opacity = "0.1";
+                }
+            });
+        }
+    </script>
+</body>
+</html>
